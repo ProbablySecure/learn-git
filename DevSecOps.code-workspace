@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "../../DevSecOps"
+		},
+		{
+			"name": "Test",
+			"path": "../../DevSecOps/Test"
+		}
+	],
+	"settings": {}
+}
