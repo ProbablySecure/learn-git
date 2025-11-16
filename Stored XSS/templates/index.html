@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Stored XSS Demo - Comment Board</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(42, 82, 152, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .warning-banner {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .comments-section {
+            margin-top: 30px;
+        }
+
+        .comments-section h2 {
+            color: white;
+            font-size: 20px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .comment-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #2a5298;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .comment-message {
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+            word-break: break-word;
+            margin-bottom: 10px;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+
+        .security-notice {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            .form-card {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .comments-section h2 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💬 Comment Board</h1>
+            <p>Stored XSS Vulnerability Demo</p>
+        </header>
+
+        <div class="form-card">
+            <div class="warning-banner">
+                ⚠️ <strong>Educational Lab:</strong> This application intentionally stores unsanitized user input. For learning purposes only!
+            </div>
+
+            <form action="/add" method="POST">
+                <div class="form-group">
+                    <label for="author">Your Name:</label>
+                    <input type="text" id="author" name="author" placeholder="Enter your name..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Comment:</label>
+                    <textarea id="message" name="message" placeholder="Write your comment..." required></textarea>
+                </div>
+
+                <button type="submit">📤 Post Comment</button>
+            </form>
+
+            <div class="security-notice">
+                🔴 <strong>Vulnerability:</strong> This app stores user input directly without sanitization, making it vulnerable to Stored XSS. Any HTML/JavaScript in comments will execute when viewed!
+            </div>
+        </div>
+
+        <div class="comments-section">
+            <h2>All Comments</h2>
+            {% if comments %}
+                {% for comment in comments %}
+                    <div class="comment-card">
+                        <div class="comment-author">{{ comment[1] }}</div>
+                        <!-- INTENTIONALLY UNSAFE: Using |safe to render unsanitized stored input -->
+                        <div class="comment-message">{{ comment[2]|safe }}</div>
+                        <div class="comment-time">{{ comment[3] }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    No comments yet. Be the first to comment! 🚀
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

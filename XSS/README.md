@@ -9,14 +9,20 @@ Files added
 - `templates/index.html` - template that uses `{{ q|safe }}` (intentionally unsafe).
 - `requirements.txt` - lists `Flask`.
 
-Run (Windows PowerShell)
-```powershell
+Run (Windows Command Prompt)
+```cmd
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+.venv\Scripts\activate.bat
 pip install -r requirements.txt
-$env:FLASK_APP = "app.py"
-flask run --host=127.0.0.1 --port=5000
+python app.py
 ```
+
+Run with Docker
+```cmd
+docker-compose up --build
+```
+
+Then open `http://localhost:5000` in your browser.
 
 Security Notice (read before using)
 - This code is intentionally vulnerable for learning and testing in a controlled environment only.
