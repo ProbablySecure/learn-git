@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Reflected XSS Demo</title>
+</head>
+<body>
+    <h1>Reflected XSS Demo</h1>
+    <form action="/" method="get">
+        <label for="q">Search:</label>
+        <input id="q" name="q" value="{{ q }}">
+        <button type="submit">Search</button>
+    </form>
+
+    <section>
+        <h2>Results</h2>
+        <!-- Intentionally unsafe: using the 'safe' filter to demonstrate reflected XSS -->
+        <div>Search results for: {{ q|safe }}</div>
+        <p>This page intentionally renders unsanitized input for educational purposes only.</p>
+    </section>
+</body>
+</html>
